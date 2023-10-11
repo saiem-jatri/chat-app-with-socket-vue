@@ -12,20 +12,87 @@
 
 <body>
 <div id="app">
-    <div class="p-20 bg-blue-100">
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold mb-2 text-gray-800">This is my Chat app</h2>
-            <ul class="list-outside list-none">
-                <li v-for="message in messages">{{message}}</li>
-            </ul>
+    <div v-if="ready">
+        <p class="text-black" v-for="item in info">{{item.name}}  {{item.type}}</p>
+    </div>
+<!--    login form-->
+    <section v-if="!ready" class="bg-gray-50 min-h-screen flex items-center justify-center">
+        <!-- login container -->
+        <div class="bg-gray-100 flex rounded-2xl shadow-lg max-w-3xl p-5 items-center">
+            <!-- form -->
+            <div class="px-8 md:px-16">
+                <h2 class="font-bold text-2xl text-[#002D74]">Set Your Name</h2>
 
-<!--            form-->
-                <form @submit.prevent="sendMessage">
-                    <div class="flex items-center mb-5 w-1/2">
-                        <input v-model="newMessage" name="name" id="name" type="text" placeholder="type here" class="border-b-2 border-gray-400 flex-1 py-2 placeholder-gray-300 outline-none focus:border-green-400">
-                    </div>
+                <form @submit.prevent="addName" action="" class="flex flex-col gap-4">
+                    <input v-model="name" class="p-2 mt-8 rounded-xl border" type="text" name="name" placeholder="name">
+                    <button class="bg-[#002D74] rounded-xl text-white py-2 hover:scale-105 duration-300">Login</button>
                 </form>
+            </div>
+
         </div>
+    </section>
+<!--    random-->
+
+    <div v-if="ready" style="overscroll-behavior: none;">
+        <div
+                class="fixed px-4 w-full bg-blue-800 h-16 pt-2 text-white flex justify-between shadow-md"
+                style="top:0px; overscroll-behavior: none;"
+        >
+
+                <div class="text-green-100 font-bold text-sm tracking-wide ">Let's chat
+                <div class="text-xs" v-if="ready">{{name}}</div>
+                </div>
+            <div class="text-white text-right block"  v-if="typing">{{typing.split('').includes(' ') ? typing.split(' ').slice(1).join() : typing}} is typing...</div>
+            <!-- 3 dots -->
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    class="icon-dots-vertical w-8 h-8 mt-2 mr-2"
+            >
+                <path
+                        class="text-green-100 fill-current"
+                        fill-rule="evenodd"
+                        d="M12 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                />
+            </svg>
+        </div>
+
+        <div class="mt-20 mb-16">
+            <div class="clearfix">
+            <div class="clearfix">
+                <div class="w-full flex flex-col" v-for="message in messages"
+                        :class="message.type === 0 ? 'text-right bg-green-300 float-right w-3/4 mx-4 my-2 p-2 rounded-lg clearfix' : 'text-left bg-gray-300 w-3/4 mx-4 my-2 p-2 rounded-lg'"
+                > <span class="flex items-center">{{message.message}} :  <small class="text-[10px] bg-blue-600 px-2 rounded-full text-white">{{message.by.split('').includes(' ') ? message.by.split(' ').slice(1).join() : message.by}}</small></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed w-full flex justify-between bg-green-100" style="bottom: 0px;">
+                  <textarea
+                          v-model="newMessage"
+                          class="flex-grow m-2 py-2 px-4 mr-1 rounded-full border border-gray-300 bg-gray-200 resize-none"
+                          rows="1"
+                          placeholder="Message..."
+                          style="outline: none;"
+                  ></textarea>
+            <button @click="sendMessage" class="m-2" style="outline: none;">
+                <svg
+                        class="svg-inline--fa text-green-400 fa-paper-plane fa-w-16 w-12 h-12 py-2 mr-2"
+                        aria-hidden="true"
+                        focusable="false"
+                        data-prefix="fas"
+                        data-icon="paper-plane"
+                        role="img"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 512 512"
+                >
+                    <path
+                            fill="currentColor"
+                            d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                    />
+                </svg>
+            </button>
+        </form>
     </div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
@@ -33,32 +100,79 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
     const socket = io();
-    const { createApp, ref, computed, onMounted } = Vue
+    const { createApp, ref, computed, onMounted, watch } = Vue
 
     createApp({
         setup() {
             const newMessage = ref('')
             const messages = ref([])
+            const typing = ref(false)
+            const name = ref(null)
+            const ready = ref(false)
+            const info = ref([])
+
 
             const sendMessage = ()=>{
-                messages.value.push(newMessage.value)
-                socket.emit('chat-message',newMessage.value)
+                messages.value.push({message: newMessage.value , type: 0, by: 'Me'})
+                socket.emit('chat-message',{message: newMessage.value , user: name.value, by: name.value})
                 newMessage.value = null
             }
 
+            const addName = ()=>{
+                socket.emit('joined', name.value)
+                ready.value = true
+            }
+
+            window.onbeforeunload=()=>{
+                socket.emit('leaved',name.value)
+            }
+
+            watch(
+                () => newMessage.value,
+                (value) => {
+                    value ? socket.emit('typing', name.value) : socket.emit('stopTyping')
+                }
+            )
+
             socket.emit('Created','Saiem')
             socket.on('Created',(data)=>{
-                console.log("html",data)
+                console.log(data)
             })
             socket.on('chat-message',(data)=>{
+                console.log("log",data)
+                messages.value.push({message: data.message, type: 1 , by: data.by})
+                typing.value = false
+            })
 
-                messages.value.push(data)
+
+            socket.on('typing',(name)=>{
+                typing.value = name
+            })
+            socket.on('stopTyping',()=>{
+                typing.value = false
+            })
+            socket.on('joined',(data)=>{
+                info.value.push({name: data, type: 'joined'})
+                setTimeout(()=>{
+                    info.value = []
+                },5000)
+            })
+            socket.on('leaved',(data)=>{
+                info.value.push({name: data, type: 'leaved'})
+                setTimeout(()=>{
+                    info.value = []
+                },5000)
             })
 
             return {
                 newMessage,
                 sendMessage,
-                messages
+                messages,
+                typing,
+                name,
+                ready,
+                addName,
+                info
             }
         }
     }).mount('#app')
