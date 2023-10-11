@@ -22,11 +22,11 @@
             <!-- form -->
             <div class="px-8 md:px-16">
                 <h2 class="font-bold text-2xl text-[#002D74]">Set Your Name</h2>
-
-                <form @submit.prevent="addName" action="" class="flex flex-col gap-4">
+                <form @submit.prevent="login" action="" class="flex flex-col gap-4">
                     <input v-model="name" class="p-2 mt-8 rounded-xl border" type="text" name="name" placeholder="name">
                     <button class="bg-[#002D74] rounded-xl text-white py-2 hover:scale-105 duration-300">Login</button>
                 </form>
+                <small v-if="warning">exceeded users</small>
             </div>
 
         </div>
@@ -110,22 +110,38 @@
             const name = ref(null)
             const ready = ref(false)
             const info = ref([])
-
-
+            const allUsers = ref([])
+            const warning = ref(false)
             const sendMessage = ()=>{
                 messages.value.push({message: newMessage.value , type: 0, by: 'Me'})
                 socket.emit('chat-message',{message: newMessage.value , user: name.value, by: name.value})
                 newMessage.value = null
             }
 
-            const addName = ()=>{
+            const login = ()=>{
+                allUsers.value.push({name: name.value})
+                socket.emit('allUsers', {name: name.value})
                 socket.emit('joined', name.value)
-                ready.value = true
+                if(allUsers.value.length > 2){
+                    ready.value = false
+                    warning.value = true
+                }else {
+                    ready.value = true
+                    warning.value = false
+                }
             }
+
 
             window.onbeforeunload=()=>{
                 socket.emit('leaved',name.value)
             }
+            watch(
+                () => allUsers.value,
+                (value) => {
+                    value.length > 2 ? ready.value = false : ''
+                    warning.value = true
+                }
+            )
 
             watch(
                 () => newMessage.value,
@@ -164,6 +180,12 @@
                 },5000)
             })
 
+            socket.on('allUsers',(data)=>{
+                console.log("log",data)
+                allUsers.value.push({name:data.name})
+                console.log("after push", allUsers.value)
+            })
+
             return {
                 newMessage,
                 sendMessage,
@@ -171,8 +193,11 @@
                 typing,
                 name,
                 ready,
-                addName,
-                info
+                // addName,
+                info,
+                allUsers,
+                login,
+                warning
             }
         }
     }).mount('#app')

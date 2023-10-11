@@ -35,6 +35,10 @@ io.on('connection', (socket) => {
     socket.on('leaved',(data)=>{
         socket.broadcast.emit('leaved',(data))
     })
+    socket.on('allUsers',(data)=>{
+        socket.broadcast.emit('allUsers',(data))
+    })
+
 });
 
 
