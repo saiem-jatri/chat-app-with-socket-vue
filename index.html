@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 
 <head>
     <meta charset="utf-8" />
@@ -12,9 +12,6 @@
 
 <body>
 <div id="app">
-    <div v-if="ready">
-        <p class="text-black" v-for="item in info">{{item.name}}  {{item.type}}</p>
-    </div>
 <!--    login form-->
     <section v-if="!ready" class="bg-gray-50 min-h-screen flex items-center justify-center">
         <!-- login container -->
@@ -33,7 +30,7 @@
     </section>
 <!--    random-->
 
-    <div v-if="ready" style="overscroll-behavior: none;">
+    <div class="relative" v-if="ready" style="overscroll-behavior: none;">
         <div
                 class="fixed px-4 w-full bg-blue-800 h-16 pt-2 text-white flex justify-between shadow-md"
                 style="top:0px; overscroll-behavior: none;"
@@ -56,7 +53,6 @@
                 />
             </svg>
         </div>
-
         <div class="mt-20 mb-16">
             <div class="clearfix">
             <div class="clearfix">
@@ -65,6 +61,9 @@
                 > <span class="flex items-center">{{message.message}} :  <small class="text-[10px] bg-blue-600 px-2 rounded-full text-white">{{message.by.split('').includes(' ') ? message.by.split(' ').slice(1).join() : message.by}}</small></span></div>
             </div>
         </div>
+            <div :class="ready ? 'right-0 top-0' : 'right-0 bottom-10'" class="absolute right-0 top-0 transition-all ease-in-out delay-150" v-if="ready">
+                <p v-for="item in info">{{item.name}} {{item.type}} joined</p>
+            </div>
     </div>
 
     <div class="fixed w-full flex justify-between bg-green-100" style="bottom: 0px;">
@@ -95,6 +94,7 @@
         </form>
     </div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -102,7 +102,7 @@
     const socket = io();
     const { createApp, ref, computed, onMounted, watch } = Vue
 
-    createApp({
+ const app = createApp({
         setup() {
             const newMessage = ref('')
             const messages = ref([])
@@ -115,13 +115,18 @@
             const sendMessage = ()=>{
                 messages.value.push({message: newMessage.value , type: 0, by: 'Me'})
                 socket.emit('chat-message',{message: newMessage.value , user: name.value, by: name.value})
+                socket.emit('dataEvent',{message: newMessage.value , user: name.value, by: name.value})
+                handleData({message: newMessage.value , user: name.value, by: name.value})
                 newMessage.value = null
+
+            }
+
+            const handleData = (data)=>{
+                let existingChat = JSON.parse(localStorage.getItem('socketData'))
+                localStorage.setItem('socketData', JSON.stringify([...existingChat, data]));
             }
 
             const login = ()=>{
-                allUsers.value.push({name: name.value})
-                socket.emit('allUsers', {name: name.value})
-                socket.emit('joined', name.value)
                 if(allUsers.value.length > 2){
                     ready.value = false
                     warning.value = true
@@ -129,8 +134,13 @@
                     ready.value = true
                     warning.value = false
                 }
+                allUsers.value.push({name: name.value})
+                socket.emit('allUsers', {name: name.value})
+                socket.emit('joined', name.value)
             }
-
+            onMounted(()=>{
+                console.log("info", info.value)
+            })
 
             window.onbeforeunload=()=>{
                 socket.emit('leaved',name.value)
@@ -185,6 +195,10 @@
                 allUsers.value.push({name:data.name})
                 console.log("after push", allUsers.value)
             })
+            socket.on('dataEvent', (data) => {
+                // Process the received data
+                handleData(data);
+            });
 
             return {
                 newMessage,
@@ -197,12 +211,12 @@
                 info,
                 allUsers,
                 login,
-                warning
+                warning,
             }
         }
-    }).mount('#app')
+    })
+    app.mount('#app')
 </script>
-
 </body>
 
 </html>

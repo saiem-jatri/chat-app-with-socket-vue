@@ -38,6 +38,10 @@ io.on('connection', (socket) => {
     socket.on('allUsers',(data)=>{
         socket.broadcast.emit('allUsers',(data))
     })
+    socket.on('dataEvent',(data)=>{
+        socket.broadcast.emit('dataEvent',(data))
+    })
+
 
 });
 
