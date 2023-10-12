@@ -115,7 +115,6 @@
             const sendMessage = ()=>{
                 messages.value.push({message: newMessage.value , type: 0, by: 'Me'})
                 socket.emit('chat-message',{message: newMessage.value , user: name.value, by: name.value})
-                socket.emit('dataEvent',{message: newMessage.value , user: name.value, by: name.value})
                 handleData({message: newMessage.value , user: name.value, by: name.value})
                 newMessage.value = null
 
@@ -195,10 +194,6 @@
                 allUsers.value.push({name:data.name})
                 console.log("after push", allUsers.value)
             })
-            socket.on('dataEvent', (data) => {
-                // Process the received data
-                handleData(data);
-            });
 
             return {
                 newMessage,
