@@ -21,7 +21,21 @@
                 <h2 class="font-bold text-2xl text-[#002D74]">Set Your Name</h2>
                 <form @submit.prevent="login" action="" class="flex flex-col gap-4">
                     <input v-model="name" class="p-2 mt-8 rounded-xl border" type="text" name="name" placeholder="name">
+<!--                    <div>-->
+                        <h2 class="font-bold text-sm text-[#002D74]">Set Your Profile image</h2>
+<!--                        <input id="img" class="hidden" type="file" @change="handleImageUpload" accept="image/*" />-->
+<!--                        <label for="img">Upload image</label>-->
+<!--                      -->
+<!--                    </div>-->
+                    <div class='file file--upload'>
+                        <label for='input-file'>
+                            <i class="material-icons"><img class="h-6 w-6" src="https://w7.pngwing.com/pngs/733/160/png-transparent-computer-icons-upload-youtube-icon-upload-miscellaneous-photography-sign-thumbnail.png" alt=""></i>Upload
+                        </label>
+                        <img class="h-10 w-10" v-if="imageData" :src="imageData" alt="Uploaded Image" />
+                        <input @change="handleImageUpload" id='input-file' type='file' />
+                    </div>
                     <button class="bg-[#002D74] rounded-xl text-white py-2 hover:scale-105 duration-300">Login</button>
+
                 </form>
                 <small v-if="warning">exceeded users</small>
             </div>
@@ -39,7 +53,7 @@
                         <div class="bg-cover h-40" style="background-image: url('https://images.unsplash.com/photo-1522093537031-3ee69e6b1746?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a634781c01d2dd529412c2d1e2224ec0&auto=format&fit=crop&w=2098&q=80');"></div>
                         <div class="border-b px-4 pb-6">
                             <div class="text-center sm:text-left sm:flex mb-4">
-                                <img :src="profileImage" class="h-32 w-32 rounded-full border-4 border-white -mt-16 mr-4"  alt="image">
+                                <img :src="imageData" class="h-32 w-32 rounded-full border-4 border-white -mt-16 mr-4"  alt="image">
                                 <div class="py-2">
                                     <h3 class="font-bold text-2xl mb-1">{{name}}</h3>
                                     <div class="inline-flex text-grey-dark sm:flex items-center">
@@ -78,7 +92,7 @@
 
     <div class="relative" v-if="isMessage" style="overscroll-behavior: none;">
         <div
-                class="fixed px-4 w-full bg-blue-800 h-16 pt-2 text-white flex justify-between shadow-md"
+                class="fixed px-4 w-full bg-black h-16 pt-2 text-white flex justify-between shadow-md"
                 style="top:0px; overscroll-behavior: none;"
         >
 
@@ -87,56 +101,27 @@
                 </div>
             <div class="text-white text-right block"  v-if="typing">{{typing.split('').includes(' ') ? typing.split(' ').slice(1).join() : typing}} is typing...</div>
             <!-- 3 dots -->
-            <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    class="icon-dots-vertical w-8 h-8 mt-2 mr-2"
-            >
-                <path
-                        class="text-green-100 fill-current"
-                        fill-rule="evenodd"
-                        d="M12 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
-                />
-            </svg>
+            <div class="h-10 w-10 border-2 border-gray-200 rounded-full flex justify-center items-center">
+                <img class="rounded-full" :src="imageData" alt="profile image">
+            </div>
         </div>
         <div class="mt-20 mb-16">
             <div class="clearfix">
-            <div class="clearfix">
-                <div class="w-full flex flex-col" v-for="message in messages"
-                        :class="message.type === 0 ? 'text-right bg-green-300 float-right w-3/4 mx-4 my-2 p-2 rounded-lg clearfix' : 'text-left bg-gray-300 w-3/4 mx-4 my-2 p-2 rounded-lg'"
+                <div class="w-full flex flex-col text-white" v-for="message in messages"
+                        :class="message.type === 0 ? 'text-right bg-black float-right w-3/4 mx-4 my-2 p-2 rounded-lg clearfix' : 'text-left bg-gray-300 w-3/4 mx-4 my-2 p-2 rounded-lg'"
                 > <span class="flex items-center">{{message.message}} :  <small class="text-[10px] bg-blue-600 px-2 rounded-full text-white">{{message.by.split('').includes(' ') ? message.by.split(' ').slice(1).join() : message.by}}</small></span></div>
             </div>
-        </div>
             <div :class="ready ? 'right-0 top-0' : 'right-0 bottom-10'" class="absolute right-0 top-0 transition-all ease-in-out delay-150" v-if="ready">
                 <p v-for="item in info">{{item.name}} {{item.type}} joined</p>
             </div>
+
     </div>
     <div class="fixed w-full flex justify-between bg-blue-400" style="bottom: 0px;">
-                  <textarea
-                          v-model="newMessage"
-                          class="flex-grow m-2 py-2 px-4 mr-1 rounded-full border border-gray-300 bg-gray-200 resize-none"
-                          rows="1"
-                          placeholder="Message..."
-                          style="outline: none;"
-                  ></textarea>
-            <button @click="sendMessage" class="m-2" style="outline: none;">
-                <svg
-                        class="svg-inline--fa text-green-400 fa-paper-plane fa-w-16 w-12 h-12 py-2 mr-2"
-                        aria-hidden="true"
-                        focusable="false"
-                        data-prefix="fas"
-                        data-icon="paper-plane"
-                        role="img"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 512 512"
-                >
-                    <path
-                            fill="currentColor"
-                            d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
-                    />
-                </svg>
-            </button>
+        <form @submit.prevent="sendMessage" class="msger-inputarea w-full bg-black">
+            <input v-model="newMessage" type="text" class="msger-input w-full focus:outline-none" placeholder="Enter your message...">
+            <button type="submit" class="msger-send-btn">Send</button>
         </form>
+
     </div>
 </div>
 </div>
@@ -161,7 +146,20 @@
             const profile = ref(false)
             const isMessage = ref(false)
             const showModal = ref(false)
+            const imageData = ref(null)
             const profileImage = ref('https://randomuser.me/api/portraits/men/33.jpg')
+
+            const handleImageUpload = (event)=> {
+                const file = event.target.files[0]
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        imageData.value = reader.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
             const sendMessage = ()=>{
                 messages.value.push({message: newMessage.value , type: 0, by: 'Me'})
                 socket.emit('chat-message',{message: newMessage.value , user: name.value, by: name.value})
@@ -263,7 +261,9 @@
                 chatSwitch,
                 isMessage,
                 showModal,
-                profileImage
+                profileImage,
+                imageData,
+                handleImageUpload
             }
         }
     })
@@ -289,6 +289,89 @@
         padding: 20px 30px;
         background-color: #fff;
     }
+
+    .file {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .file > input[type='file'] {
+        display: none
+    }
+
+    .file > label {
+        font-size: 1rem;
+        font-weight: 300;
+        cursor: pointer;
+        outline: 0;
+        user-select: none;
+        border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
+        border-style: solid;
+        border-radius: 4px;
+        border-width: 1px;
+        background-color: hsl(0, 0%, 100%);
+        color: hsl(0, 0%, 29%);
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 16px;
+        padding-bottom: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .file > label:hover {
+        border-color: hsl(0, 0%, 21%);
+    }
+
+    .file > label:active {
+        background-color: hsl(0, 0%, 96%);
+    }
+
+    .file > label > i {
+        padding-right: 5px;
+    }
+
+    .file--upload > label {
+        color: hsl(204, 86%, 53%);
+        border-color: hsl(204, 86%, 53%);
+    }
+
+    .file--upload > label:hover {
+        border-color: hsl(204, 86%, 53%);
+        background-color: hsl(204, 86%, 96%);
+    }
+
+    .file--upload > label:active {
+        background-color: hsl(204, 86%, 91%);
+    }
+    .msger-inputarea {
+        display: flex;
+        padding: 10px;
+        border-top: var(--border);
+        background: black;
+    }
+    .msger-inputarea * {
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 1em;
+    }
+    .msger-input {
+        flex: 1;
+        background: #ddd;
+    }
+    .msger-send-btn {
+        margin-left: 10px;
+        background: blue;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.23s;
+    }
+
 
 </style>
 
